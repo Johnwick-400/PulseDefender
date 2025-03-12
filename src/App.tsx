@@ -25,7 +25,7 @@ function App() {
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await fetch('http://localhost:10000/predict', {  // Update the port to 10000
+      const response = await fetch('http://127.0.0.1:10000//predict', {  // Update the port to 10000
         method: 'POST',
         body: formData,
       });
