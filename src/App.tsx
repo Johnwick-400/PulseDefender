@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
-import { Shield, ShieldAlert, Upload, Users, Activity, AlertTriangle } from 'lucide-react';
+// Add FileText to imports
+import { Shield, ShieldAlert, Upload, Users, Activity, AlertTriangle, FileText } from 'lucide-react';
 
 function App() {
   const [file, setFile] = useState<File | null>(null);
@@ -9,6 +10,8 @@ function App() {
     highRated: number;
   } | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  // Add isBlocking state after other state declarations
+  const [isBlocking, setIsBlocking] = useState(false);
 
   const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const uploadedFile = event.target.files?.[0];
@@ -25,7 +28,7 @@ function App() {
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await fetch('http://127.0.0.1:10000//predict', {  // Update the port to 10000
+      const response = await fetch('http://127.0.0.1:5174//predict', {  // Update the port to 10000
         method: 'POST',
         body: formData,
       });
@@ -33,9 +36,9 @@ function App() {
       if (!response.ok) {
         throw new Error('Failed to analyze file');
       }
-
+      
       const predictions = await response.json();
-
+      
       setResults({
         legitimate: predictions.legitimate_count,
         lowRated: predictions.low_rated_count,
@@ -46,6 +49,41 @@ function App() {
       alert('Failed to analyze file. Please try again.');
     } finally {
       setIsAnalyzing(false);
+    }
+  }, [file]);
+
+  // Update the blockIPs function
+  const blockIPs = useCallback(async () => {
+    if (!file) return;
+
+    setIsBlocking(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('http://127.0.0.1:5174/block', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get blocked IPs');
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'blocked_ips.csv';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+    } catch (error) {
+      console.error('Error blocking IPs:', error);
+      alert('Failed to block IPs. Please try again.');
+    } finally {
+      setIsBlocking(false);
     }
   }, [file]);
 
@@ -135,6 +173,28 @@ function App() {
                 <p className="text-3xl font-bold text-red-400">{results.highRated}</p>
               </div>
             </div>
+          )}
+
+          {results && (
+            <button
+              onClick={blockIPs}
+              disabled={isBlocking}
+              className={`mt-6 w-full py-3 px-6 rounded-lg font-semibold transition-all flex items-center justify-center ${
+                isBlocking ? 'bg-red-400 cursor-not-allowed' : 'bg-red-500 hover:bg-red-600'
+              }`}
+            >
+              {isBlocking ? (
+                <>
+                  <Activity className="w-5 h-5 mr-2 animate-spin" />
+                  Generating Blocked IP List...
+                </>
+              ) : (
+                <>
+                  <FileText className="w-5 h-5 mr-2" />
+                  Download Blocked IP Addresses
+                </>
+              )}
+            </button>
           )}
         </div>
       </div>

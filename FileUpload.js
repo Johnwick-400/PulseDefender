@@ -14,10 +14,10 @@ const FileUpload = () => {
     e.preventDefault();
     const formData = new FormData();
     formData.append('file', file);
-
+    
     try {
-      const response = await axios.post('http://127.0.0.1:10000/predict', formData, {
-        headers: {
+      const response = await axios.post('http://127.0.0.1:5174/predict', formData, {
+            headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
