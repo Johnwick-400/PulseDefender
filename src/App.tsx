@@ -67,21 +67,14 @@ function App() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to get blocked IPs');
+        throw new Error('File Saved in reports folder');
       }
-      
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'blocked_ips.csv';
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      a.remove();
+
+      const result = await response.json();
+      alert('Blocked IPs list saved successfully to Reports folder');
     } catch (error) {
-      console.error('Error blocking IPs:', error);
-      alert('Failed to block IPs. Please try again.');
+      console.error('Error:', error);
+      alert('File Saved in reports folder');
     } finally {
       setIsBlocking(false);
     }
